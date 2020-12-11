@@ -14,7 +14,7 @@ public class User extends BaseModel {
     @Column
     private String password;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(referencedColumnName = "id",foreignKey =@ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Staff staff;
 
