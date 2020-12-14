@@ -2,19 +2,23 @@ package com.test.repository.base;
 
 import com.test.model.base.BakDeleteModel;
 import com.test.model.base.BaseModel;
-import org.apache.tomcat.jni.User;
+import org.hibernate.query.internal.NativeQueryImpl;
+import org.hibernate.transform.AliasToBeanResultTransformer;
+import org.hibernate.transform.AliasToEntityMapResultTransformer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import javax.persistence.Query;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 
 public class BaseDaoImpl<T, ID extends Serializable> extends SimpleJpaRepository<T, ID> implements BaseDao<T, ID> {
@@ -23,18 +27,20 @@ public class BaseDaoImpl<T, ID extends Serializable> extends SimpleJpaRepository
 
     private final EntityManager em;
 
+    @SuppressWarnings("all")
     public BaseDaoImpl(JpaEntityInformation<T, ?> entityInformation, EntityManager em) {
         super(entityInformation, em);
         this.em = em;
-
-    }
-
-    public BaseDaoImpl(Class<T> domainClass, EntityManager em) {
-        super(domainClass, em);
-        this.em = em;
     }
 
 
+    private void setParameters(Map<String, Object> parameters, Query query) {
+        if (parameters != null && !parameters.isEmpty()) {
+            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                query.setParameter(entry.getKey(), entry.getValue());
+            }
+        }
+    }
 
     private void fillSaveValue(T t) {
         if (t instanceof BaseModel) {
@@ -76,8 +82,63 @@ public class BaseDaoImpl<T, ID extends Serializable> extends SimpleJpaRepository
             ((BakDeleteModel) t).setDeleteStatus(true);
             ((BakDeleteModel) t).setDeleteTime(new Date());
             em.merge(t);
-        }else {
+        } else {
             delete(t);
         }
+    }
+
+
+    @Override
+    public EntityManager getEntityManager() {
+        return em;
+    }
+
+    @Override
+    public List<T> nativeSQLQuery(String sql, Map<String, Object> params) {
+        Query nativeQuery = em.createNativeQuery(sql, getDomainClass());
+        setParameters(params, nativeQuery);
+        return nativeQuery.getResultList();
+    }
+
+
+    @Override
+    public Page<T> nativeSQLQuery(String sql, String countSql, Map<String, Object> params, Pageable pageable) {
+        Query nativeQuery = em.createNativeQuery(sql, getDomainClass());
+        setParameters(params, nativeQuery);
+        List<T> resultList = nativeQuery.setFirstResult((int) pageable.getOffset()).setMaxResults(pageable.getPageSize()).getResultList();
+
+        Query nativeCountQuery = em.createNativeQuery(countSql);
+        setParameters(params,nativeCountQuery);
+        Number total = (Number) nativeCountQuery.getSingleResult();
+        return new PageImpl<T>(resultList, pageable, total.longValue());
+    }
+
+    @Override
+    public Page nativeSQLQuery(String sql, String countSql, Map<String, Object> params, Class<?> cls, Pageable pageable) {
+        Query nativeQuery = em.createNativeQuery(sql);
+        nativeQuery.unwrap(NativeQueryImpl.class).setResultTransformer(new AliasToBeanResultTransformer(cls));
+        setParameters(params, nativeQuery);
+        List resultList = nativeQuery.setFirstResult((int) pageable.getOffset()).setMaxResults(pageable.getPageSize()).getResultList();
+
+        Query nativeCountQuery = em.createNativeQuery(countSql);
+        setParameters(params,nativeCountQuery);
+        Number total = (Number) nativeCountQuery.getSingleResult();
+        return new PageImpl<>(resultList, pageable, total.longValue());
+    }
+
+    @Override
+    public List nativeSQLQuery(String sql, Map<String, Object> params, Class<?> cls) {
+        Query nativeQuery = em.createNativeQuery(sql);
+        nativeQuery.unwrap(NativeQueryImpl.class).setResultTransformer(new AliasToBeanResultTransformer(cls));
+        setParameters(params, nativeQuery);
+        return nativeQuery.getResultList();
+    }
+
+    @Override
+    public List<Map<String, Object>> nativeSQLQueryToMap(String sql, Map<String, Object> params) {
+        Query nativeQuery = em.createNativeQuery(sql);
+        nativeQuery.unwrap(NativeQueryImpl.class).setResultTransformer(AliasToEntityMapResultTransformer.INSTANCE);
+        setParameters(params, nativeQuery);
+        return nativeQuery.getResultList();
     }
 }
