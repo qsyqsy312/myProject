@@ -6,7 +6,10 @@ import com.test.model.base.BaseModel;
 import javax.persistence.*;
 
 @Entity
+@Table(name = User.TABLE_NAME)
 public class User extends BaseModel {
+
+    public static final String TABLE_NAME = "user";
 
     @Column
     private String userName;

@@ -1,11 +1,34 @@
 package com.test.service.base;
 
+import com.test.dto.base.BaseDTO;
+import com.test.model.base.BaseModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
-public interface IBaseService<T,ID extends Serializable> {
+/**
+ * 定义增删改查常用方法
+ * @param <T>
+ * @param <ID>
+ */
+public interface IBaseService<T extends BaseModel, ID extends Serializable> {
 
-    Specification<T> getSpecification(Map<String,Object> queryParam);
+    Specification<T> getSpecification(Map<String, Object> queryParam);
+
+    BaseDTO save(BaseDTO dto);
+
+    BaseDTO update(BaseDTO dto);
+
+    void deleteByIds(Iterable<ID> ids);
+
+    T findOneById(ID id);
+
+    List<BaseDTO> list(Map<String, Object> queryParam,Sort sort);
+
+    Page<BaseDTO> page(Map<String, Object> queryParam,Pageable pageable);
 }

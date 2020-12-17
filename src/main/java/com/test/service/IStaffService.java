@@ -9,6 +9,4 @@ import java.util.Map;
 import java.util.Set;
 
 public interface IStaffService extends IBaseService<Staff,String> {
-
-    List<Staff> list(Map<String,Object> queryParam);
 }

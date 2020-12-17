@@ -2,18 +2,24 @@ package com.test.repository.base;
 
 import com.test.model.base.BakDeleteModel;
 import com.test.model.base.BaseModel;
+import com.test.model.base.BaseTenantModel;
 import org.hibernate.query.internal.NativeQueryImpl;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -21,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class BaseDaoImpl<T, ID extends Serializable> extends SimpleJpaRepository<T, ID> implements BaseDao<T, ID> {
+public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends SimpleJpaRepository<T, ID> implements BaseDao<T, ID> {
 
     private static final int BATCH_SIZE = 500;
 
@@ -55,7 +61,16 @@ public class BaseDaoImpl<T, ID extends Serializable> extends SimpleJpaRepository
     @Override
     public T customSave(T t) {
         fillSaveValue(t);
-        return save(t);
+        em.persist(t);
+        return t;
+    }
+
+
+    @Override
+    public T customUpdate(T t) {
+        fillSaveValue(t);
+        em.merge(t);
+        return t;
     }
 
     @Override
@@ -89,8 +104,32 @@ public class BaseDaoImpl<T, ID extends Serializable> extends SimpleJpaRepository
 
 
     @Override
+    public T findOneById(ID id) {
+        return em.find(getDomainClass(), id);
+    }
+
+    @Override
     public EntityManager getEntityManager() {
         return em;
+    }
+
+
+    @Override
+    public Specification<T> getBaseSpecification(Map<String, Object> queryParam) {
+        Class<T> domainClass = getDomainClass();
+        return new Specification<T>() {
+            @Override
+            public Predicate toPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+                CriteriaQuery<?> baseSearch = query.where();
+                if (BakDeleteModel.class.isAssignableFrom(domainClass)) {
+                    baseSearch.where(criteriaBuilder.equal(root.get("deleteStatus"), Boolean.FALSE)).getRestriction();
+                }
+                if (BaseTenantModel.class.isAssignableFrom(domainClass)) {
+                    baseSearch.where(criteriaBuilder.equal(root.get("tenantId"), queryParam.get("tenantId"))).getRestriction();
+                }
+                return baseSearch.getRestriction();
+            }
+        };
     }
 
     @Override
@@ -108,7 +147,7 @@ public class BaseDaoImpl<T, ID extends Serializable> extends SimpleJpaRepository
         List<T> resultList = nativeQuery.setFirstResult((int) pageable.getOffset()).setMaxResults(pageable.getPageSize()).getResultList();
 
         Query nativeCountQuery = em.createNativeQuery(countSql);
-        setParameters(params,nativeCountQuery);
+        setParameters(params, nativeCountQuery);
         Number total = (Number) nativeCountQuery.getSingleResult();
         return new PageImpl<T>(resultList, pageable, total.longValue());
     }
@@ -121,7 +160,7 @@ public class BaseDaoImpl<T, ID extends Serializable> extends SimpleJpaRepository
         List resultList = nativeQuery.setFirstResult((int) pageable.getOffset()).setMaxResults(pageable.getPageSize()).getResultList();
 
         Query nativeCountQuery = em.createNativeQuery(countSql);
-        setParameters(params,nativeCountQuery);
+        setParameters(params, nativeCountQuery);
         Number total = (Number) nativeCountQuery.getSingleResult();
         return new PageImpl<>(resultList, pageable, total.longValue());
     }

@@ -1,55 +1,57 @@
 package com.test.service.impl;
 
 import com.test.dto.UserDTO;
+import com.test.dto.base.BaseDTO;
+import com.test.model.Staff;
 import com.test.model.User;
-import com.test.repository.UserRepository;
 import com.test.service.IUserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.test.service.base.BaseService;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.criteria.*;
-import java.util.List;
 import java.util.Map;
 
 @Service
-public class UserService implements IUserService {
+public class UserService extends BaseService<User, String> implements IUserService {
 
 
-    @Autowired
-    private UserRepository userRepository;
 
 
     @Override
-    public List<User> list(Map<String, Object> queryParam) {
-        String sql ="SELECT userName from user u LEFT JOIN staff s ON u.staff_id = s.id where s.name = :staffName";
-        return userRepository.nativeSQLQuery(sql,queryParam, UserDTO.class);
+    public User toEntity(BaseDTO dto, User entity) {
+        UserDTO userDTO = (UserDTO) dto;
+        if (entity == null) {
+            entity = new User();
+        }
+        entity.setUserName(userDTO.getUserName());
+        Staff staff = new Staff();
+        staff.setId("1");
+        entity.setStaff(staff);
+        return entity;
     }
 
-
     @Override
-    public Page<User> page(Map<String, Object> queryParam, Pageable pageable) {
-        String sql ="SELECT * from user u LEFT JOIN staff s ON u.staff_id = s.id ";
-        String countSql ="SELECT count(*) from user u LEFT JOIN staff s ON u.staff_id = s.id ";
-        return userRepository.nativeSQLQuery(sql,countSql,queryParam,pageable);
+    public BaseDTO toDTO(User entity) {
+        UserDTO dto = new UserDTO();
+        dto.setUserName(entity.getUserName());
+        dto.setId(entity.getId());
+        return dto;
     }
 
     @Override
     public Specification<User> getSpecification(Map<String, Object> queryParam) {
-        Specification<User> specification = new Specification<User>() {
+        Specification<User> querySpec = new Specification<User>() {
             @Override
             public Predicate toPredicate(Root<User> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 Predicate predicate = criteriaBuilder.conjunction();
-                if(queryParam.get("staffName")!=null){
+                if (queryParam.get("staffName") != null) {
                     Join<Object, Object> staff = root.join("staff");
-                    predicate.getExpressions().add(criteriaBuilder.equal(staff.get("name"),queryParam.get("staffName")));
+                    predicate.getExpressions().add(criteriaBuilder.equal(staff.get("name"), queryParam.get("staffName")));
                 }
                 return predicate;
             }
         };
-        return specification;
+        return baseDao.getBaseSpecification(queryParam).and(querySpec);
     }
 }

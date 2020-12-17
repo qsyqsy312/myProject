@@ -1,6 +1,8 @@
 package com.test.dto;
 
-public class UserDTO {
+import com.test.dto.base.BaseDTO;
+
+public class UserDTO extends BaseDTO {
 
     private String userName;
 

@@ -1,8 +1,10 @@
 package com.test.service.impl;
 
+import com.test.dto.base.BaseDTO;
 import com.test.model.Staff;
 import com.test.repository.StaffRepository;
 import com.test.service.IStaffService;
+import com.test.service.base.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,19 +19,9 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
-public class StaffService implements IStaffService {
+public class StaffService extends BaseService<Staff,String> implements IStaffService {
 
 
-    @Autowired
-    private StaffRepository staffRepository;
-
-
-
-    @Override
-    public List<Staff> list(Map<String,Object> queryParam) {
-        Sort sort = Sort.by(Sort.Direction.DESC,"name");
-        return staffRepository.findAll(getSpecification(queryParam),sort);
-    }
 
     @Override
     public Specification<Staff> getSpecification(Map<String,Object> queryParam) {
@@ -51,5 +43,15 @@ public class StaffService implements IStaffService {
             }
         };
         return specification;
+    }
+
+    @Override
+    public Staff toEntity(BaseDTO dto, Staff entity) {
+        return null;
+    }
+
+    @Override
+    public BaseDTO toDTO(Staff entity) {
+        return null;
     }
 }

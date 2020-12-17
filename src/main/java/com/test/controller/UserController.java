@@ -1,14 +1,12 @@
 package com.test.controller;
 
+import com.test.dto.UserDTO;
 import com.test.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -19,16 +17,28 @@ public class UserController {
     @Autowired
     private IUserService userService;
 
-    @RequestMapping(value = "query",method = RequestMethod.GET)
+
+
+    @RequestMapping(value = "save", method = RequestMethod.POST)
     @ResponseBody
-    public Object query(@RequestParam Map<String,Object> queryParam){
-        return userService.list(queryParam);
+    public Object save(@RequestBody UserDTO userDTO) {
+        return userService.save(userDTO);
+    }
+
+    @RequestMapping(value = "query", method = RequestMethod.GET)
+    @ResponseBody
+    public Object query(@RequestParam Map<String, Object> queryParam) {
+        return userService.list(queryParam, Sort.unsorted());
     }
 
 
-    @RequestMapping(value = "page",method = RequestMethod.GET)
+    @RequestMapping(value = "page", method = RequestMethod.GET)
     @ResponseBody
-    public Object query(@RequestParam Map<String,Object> queryParam, @PageableDefault Pageable pageable){
-        return userService.page(queryParam,pageable);
+    public Object page(@RequestParam Map<String, Object> queryParam) {
+        PageRequest pageRequest = PageRequest.of(Integer.valueOf(queryParam.get("page").toString()), Integer.valueOf(queryParam.get("size").toString()));
+        queryParam.clear();
+        return userService.page(queryParam, pageRequest);
     }
+
+
 }

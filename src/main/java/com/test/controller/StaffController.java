@@ -3,6 +3,7 @@ package com.test.controller;
 
 import com.test.service.IStaffService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -23,7 +24,7 @@ public class StaffController {
     @RequestMapping(value = "query",method = RequestMethod.GET)
     @ResponseBody
     public Object query(@RequestParam Map<String,Object> queryParam){
-        return staffService.list(queryParam);
+        return staffService.list(queryParam, Sort.unsorted());
     }
 
 }

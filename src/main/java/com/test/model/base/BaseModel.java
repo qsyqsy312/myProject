@@ -9,9 +9,10 @@ import java.util.Date;
 @MappedSuperclass
 public class BaseModel implements Serializable {
 
+    /**
+     * id由代码控制
+     */
     @Id
-    @GeneratedValue(generator = "customIdGenerate")
-    @GenericGenerator(name = "customIdGenerate", strategy = "com.test.util.CustomIdGenerate")
     private String id;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -47,5 +48,20 @@ public class BaseModel implements Serializable {
 
     public void setLastModifyTime(Date lastModifyTime) {
         this.lastModifyTime = lastModifyTime;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BaseModel baseModel = (BaseModel) o;
+
+        return id.equals(baseModel.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 }
