@@ -31,7 +31,7 @@ spring:
     show-sql: true
     database-platform: org.hibernate.dialect.MySQL57Dialect
   shardingsphere:
-    enabled: false
+    enabled: true
     datasource:
       names: db0
       db0:
@@ -43,11 +43,12 @@ spring:
     sharding:
       tables:
         user:
-          actual-data-nodes: db0.user_$->{1949..3000}0$->{1..9},db0.user_$->{1949..3000}$->{10..12}
+          actual-data-nodes: db0.user_$->{2000..2100}0$->{1..9},db0.user_$->{2000..2100}$->{10..12}
           table-strategy:
             standard:
               sharding-column: createTime
               preciseAlgorithmClassName: com.test.util.UserShardingAlgorithm
+              rangeAlgorithmClassName: com.test.util.UserShardingAlgorithm
       binding-tables: user
 
 

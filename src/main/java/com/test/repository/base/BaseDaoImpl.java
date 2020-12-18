@@ -48,19 +48,11 @@ public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends S
         }
     }
 
-    private void fillSaveValue(T t) {
-        if (t instanceof BaseModel) {
-            ((BaseModel) t).setLastModifyTime(new Date());
-            if (StringUtils.isEmpty(((BaseModel) t).getId())) {
-                ((BaseModel) t).setCreateTime(new Date());
-            }
-        }
-    }
+
 
 
     @Override
     public T customSave(T t) {
-        fillSaveValue(t);
         em.persist(t);
         return t;
     }
@@ -68,7 +60,6 @@ public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends S
 
     @Override
     public T customUpdate(T t) {
-        fillSaveValue(t);
         em.merge(t);
         return t;
     }
@@ -79,7 +70,6 @@ public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends S
         int num = 0;
         while (var1.iterator().hasNext()) {
             S s = var1.iterator().next();
-            fillSaveValue(s);
             list.add(s);
             num++;
             em.persist(s);

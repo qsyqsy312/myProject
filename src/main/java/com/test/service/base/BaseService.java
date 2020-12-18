@@ -10,8 +10,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,7 +48,18 @@ public abstract class BaseService<T extends BaseModel, ID extends Serializable> 
     @Override
     public void customIDGenerator(T t){
         if (t.getId() == null) {
-            t.setId(UUID.randomUUID().toString().replace("-", ""));
+            t.setId(UUID.randomUUID().toString().replaceAll("-", ""));
+        }
+    }
+
+
+
+    protected void fillSaveValue(T t) {
+        if (t instanceof BaseModel) {
+            ((BaseModel) t).setLastModifyTime(new Date());
+            if (StringUtils.isEmpty(((BaseModel) t).getId())) {
+                ((BaseModel) t).setCreateTime(new Date());
+            }
         }
     }
 
@@ -54,6 +67,7 @@ public abstract class BaseService<T extends BaseModel, ID extends Serializable> 
     @Transactional(rollbackFor = Exception.class,propagation = Propagation.REQUIRED)
     public BaseDTO save(BaseDTO dto) {
         T t = toEntity(dto,null);
+        fillSaveValue(t);
         customIDGenerator(t);
         return toDTO(baseDao.customSave(t));
     }
@@ -64,6 +78,7 @@ public abstract class BaseService<T extends BaseModel, ID extends Serializable> 
     public BaseDTO update(BaseDTO dto) {
         T one = baseDao.findOneById((ID) dto.getId());
         T t = toEntity(dto,one);
+        fillSaveValue(t);
         return toDTO(baseDao.customUpdate(t));
     }
 
