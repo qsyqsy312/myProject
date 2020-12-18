@@ -1,10 +1,12 @@
 package com.test.service.impl;
 
+import com.test.dto.StaffDTO;
 import com.test.dto.base.BaseDTO;
 import com.test.model.Staff;
 import com.test.repository.StaffRepository;
 import com.test.service.IStaffService;
 import com.test.service.base.BaseService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -47,11 +49,14 @@ public class StaffService extends BaseService<Staff,String> implements IStaffSer
 
     @Override
     public Staff toEntity(BaseDTO dto, Staff entity) {
-        return null;
+         BeanUtils.copyProperties(dto,entity);
+         return entity;
     }
 
     @Override
     public BaseDTO toDTO(Staff entity) {
-        return null;
+        StaffDTO staffDTO =new StaffDTO();
+        BeanUtils.copyProperties(entity,staffDTO);
+        return staffDTO;
     }
 }

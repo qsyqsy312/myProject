@@ -17,6 +17,8 @@ import java.util.Map;
 @NoRepositoryBean
 public interface BaseDao<T extends BaseModel, ID extends Serializable> extends JpaRepository<T, ID>, JpaSpecificationExecutor<T> {
 
+    Class<T> getDomainClazz();
+
     T customSave(T t);
 
 

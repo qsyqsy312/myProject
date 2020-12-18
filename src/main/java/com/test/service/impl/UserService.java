@@ -45,9 +45,6 @@ public class UserService extends ShardingService<User, String> implements IUserS
     @Override
     public User toEntity(BaseDTO dto, User entity) {
         UserDTO userDTO = (UserDTO) dto;
-        if (entity == null) {
-            entity = new User();
-        }
         entity.setUserName(userDTO.getUserName());
         Staff staff = new Staff();
         staff.setId("1");

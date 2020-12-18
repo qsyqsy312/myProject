@@ -13,6 +13,7 @@ import java.util.Map;
 
 /**
  * 定义增删改查常用方法
+ *
  * @param <T>
  * @param <ID>
  */
@@ -20,15 +21,15 @@ public interface IBaseService<T extends BaseModel, ID extends Serializable> {
 
     Specification<T> getSpecification(Map<String, Object> queryParam);
 
-    BaseDTO save(BaseDTO dto);
+    BaseDTO save(BaseDTO dto) throws Exception;
 
-    BaseDTO update(BaseDTO dto);
+    BaseDTO update(BaseDTO dto) throws Exception;
 
-    void deleteByIds(Iterable<ID> ids);
+    void deleteByIds(Iterable<ID> ids) throws Exception;
 
     T findOneById(ID id);
 
-    List<BaseDTO> list(Map<String, Object> queryParam,Sort sort);
+    List<BaseDTO> list(Map<String, Object> queryParam, Sort sort);
 
-    Page<BaseDTO> page(Map<String, Object> queryParam,Pageable pageable);
+    Page<BaseDTO> page(Map<String, Object> queryParam, Pageable pageable);
 }

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -65,10 +66,11 @@ public abstract class BaseService<T extends BaseModel, ID extends Serializable> 
 
     @Override
     @Transactional(rollbackFor = Exception.class,propagation = Propagation.REQUIRED)
-    public BaseDTO save(BaseDTO dto) {
-        T t = toEntity(dto,null);
+    public BaseDTO save(BaseDTO dto) throws Exception{
+        T t = toEntity(dto,baseDao.getDomainClazz().newInstance());
         fillSaveValue(t);
         customIDGenerator(t);
+
         return toDTO(baseDao.customSave(t));
     }
 

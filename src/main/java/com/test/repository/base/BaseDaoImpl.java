@@ -49,7 +49,10 @@ public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends S
     }
 
 
-
+    @Override
+    public Class<T> getDomainClazz() {
+        return getDomainClass();
+    }
 
     @Override
     public T customSave(T t) {

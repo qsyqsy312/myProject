@@ -21,7 +21,7 @@ public class UserController {
 
     @RequestMapping(value = "save", method = RequestMethod.POST)
     @ResponseBody
-    public Object save(@RequestBody UserDTO userDTO) {
+    public Object save(@RequestBody UserDTO userDTO) throws Exception{
         return userService.save(userDTO);
     }
 

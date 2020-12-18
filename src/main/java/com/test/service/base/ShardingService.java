@@ -39,8 +39,8 @@ public abstract class ShardingService<T extends BaseModel, ID extends Serializab
     public abstract void init();
 
     @Override
-    public BaseDTO save(BaseDTO dto) {
-        T t = toEntity(dto,null);
+    public BaseDTO save(BaseDTO dto) throws Exception {
+        T t = toEntity(dto,baseDao.getDomainClazz().newInstance());
         fillSaveValue(t);
         customIDGenerator(t);
         createTable(t);
