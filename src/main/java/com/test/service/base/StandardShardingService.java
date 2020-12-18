@@ -2,9 +2,13 @@ package com.test.service.base;
 
 import com.test.dto.base.BaseDTO;
 import com.test.model.base.BaseModel;
+import com.test.util.UserShardingAlgorithm;
 import org.apache.shardingsphere.api.sharding.standard.PreciseShardingAlgorithm;
 import org.apache.shardingsphere.api.sharding.standard.RangeShardingAlgorithm;
 import org.apache.shardingsphere.core.rule.TableRule;
+import org.apache.shardingsphere.core.strategy.route.ShardingStrategy;
+import org.apache.shardingsphere.core.strategy.route.standard.StandardShardingStrategy;
+import org.apache.shardingsphere.shardingjdbc.jdbc.core.datasource.ShardingDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
@@ -12,31 +16,51 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 /**
- * TODO: 水平分表
+ * 单分片键水平分表
  * @param <T>
  * @param <ID>
  */
-public abstract class ShardingService<T extends BaseModel, ID extends Serializable> extends BaseService<T,ID> implements IShardingService<T,ID>{
+public abstract class StandardShardingService<T extends BaseModel, ID extends Serializable> extends BaseService<T,ID> implements IShardingService<T,ID>{
 
 
     protected PreciseShardingAlgorithm preciseShardingAlgorithm;
     protected RangeShardingAlgorithm rangeShardingAlgorithm;
     protected TableRule tableRule;
 
-
-
     @Autowired
     protected ApplicationContext applicationContext;
 
     @PostConstruct
-    public abstract void init();
+    public void init(){
+        ShardingDataSource bean = applicationContext.getBean(ShardingDataSource.class);
+        Collection<TableRule> tableRules = bean.getRuntimeContext().getRule().getTableRules();
+        for (TableRule tableRule : tableRules) {
+            if (baseDao.getTableName().equals(tableRule.getLogicTable())) {
+                this.tableRule = tableRule;
+                break;
+            }
+        }
+        Assert.notNull(tableRule,"分表规则未配置！");
+        //反射取出分片算法实现
+        StandardShardingStrategy tableShardingStrategy = (StandardShardingStrategy)tableRule.getTableShardingStrategy();
+        Field preciseShardingAlgorithm = ReflectionUtils.findField(StandardShardingStrategy.class, "preciseShardingAlgorithm");
+        ReflectionUtils.makeAccessible(preciseShardingAlgorithm);
+        Field rangeShardingAlgorithm = ReflectionUtils.findField(StandardShardingStrategy.class, "rangeShardingAlgorithm");
+        ReflectionUtils.makeAccessible(rangeShardingAlgorithm);
+        this.preciseShardingAlgorithm = (PreciseShardingAlgorithm)ReflectionUtils.getField(preciseShardingAlgorithm,tableShardingStrategy);
+        this.rangeShardingAlgorithm = (RangeShardingAlgorithm)ReflectionUtils.getField(rangeShardingAlgorithm,tableShardingStrategy);
+    }
 
     @Override
     public BaseDTO save(BaseDTO dto) throws Exception {

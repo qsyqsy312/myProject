@@ -3,6 +3,10 @@ package com.test.repository.base;
 import com.test.model.base.BakDeleteModel;
 import com.test.model.base.BaseModel;
 import com.test.model.base.BaseTenantModel;
+import org.hibernate.SessionFactory;
+import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.query.internal.NativeQueryImpl;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
@@ -12,9 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -33,10 +37,24 @@ public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends S
 
     private final EntityManager em;
 
+    private String tableName;
+
     @SuppressWarnings("all")
     public BaseDaoImpl(JpaEntityInformation<T, ?> entityInformation, EntityManager em) {
         super(entityInformation, em);
         this.em = em;
+        //获取对应表的名字
+        EntityManagerFactory entityManagerFactory = em.getEntityManagerFactory();
+        SessionFactoryImpl sessionFactory = (SessionFactoryImpl)entityManagerFactory.unwrap(SessionFactory.class);
+        MetamodelImplementor metamodel = sessionFactory.getMetamodel();
+        SingleTableEntityPersister entityPersister = (SingleTableEntityPersister)metamodel.entityPersister(getDomainClass());
+        tableName = entityPersister.getTableName();
+    }
+
+
+    @Override
+    public String getTableName() {
+        return tableName;
     }
 
 

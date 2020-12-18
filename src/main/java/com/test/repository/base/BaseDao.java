@@ -19,8 +19,9 @@ public interface BaseDao<T extends BaseModel, ID extends Serializable> extends J
 
     Class<T> getDomainClazz();
 
-    T customSave(T t);
+    String getTableName();
 
+    T customSave(T t);
 
     T customUpdate(T t);
 
