@@ -1,6 +1,7 @@
 package com.test.service.impl;
 
 import com.google.common.collect.BoundType;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.test.dto.UserDTO;
 import com.test.dto.base.BaseDTO;
@@ -8,17 +9,15 @@ import com.test.model.Staff;
 import com.test.model.User;
 import com.test.service.IUserService;
 import com.test.service.base.StandardShardingService;
-import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
-import org.apache.shardingsphere.api.sharding.standard.RangeShardingValue;
+import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingValue;
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.*;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class UserService extends StandardShardingService<User, String> implements IUserService {
@@ -28,6 +27,7 @@ public class UserService extends StandardShardingService<User, String> implement
     public User toEntity(BaseDTO dto, User entity) {
         UserDTO userDTO = (UserDTO) dto;
         entity.setUserName(userDTO.getUserName());
+        entity.setRegisterTime(userDTO.getRegisterTime());
         Staff staff = new Staff();
         staff.setId("1");
         entity.setStaff(staff);
@@ -43,6 +43,11 @@ public class UserService extends StandardShardingService<User, String> implement
     }
 
     @Override
+    public void customIDGenerator(User user) {
+        user.setId(UUID.randomUUID().toString().replaceAll("-", "")+"-"+new DateTime(user.getRegisterTime()).toString("yyyyMMddHHmmss"));
+    }
+
+    @Override
     public Specification<User> getSpecification(Map<String, Object> queryParam) {
         Specification<User> querySpec = new Specification<User>() {
             @Override
@@ -55,8 +60,8 @@ public class UserService extends StandardShardingService<User, String> implement
                 if (queryParam.get("startTime") != null && queryParam.get("endTime") != null) {
                     LocalDate startTime = LocalDate.parse((String) queryParam.get("startTime"));
                     LocalDate endTime = LocalDate.parse((String) queryParam.get("endTime"));
-                    predicate.getExpressions().add(criteriaBuilder.greaterThanOrEqualTo(root.get("createTime").as(Date.class), startTime.toDate()));
-                    predicate.getExpressions().add(criteriaBuilder.lessThanOrEqualTo(root.get("createTime").as(Date.class), endTime.toDate()));
+                    predicate.getExpressions().add(criteriaBuilder.greaterThanOrEqualTo(root.get("registerTime").as(Date.class), startTime.toDate()));
+                    predicate.getExpressions().add(criteriaBuilder.lessThanOrEqualTo(root.get("registerTime").as(Date.class), endTime.toDate()));
                 }
                 return predicate;
             }
@@ -64,17 +69,18 @@ public class UserService extends StandardShardingService<User, String> implement
         return baseDao.getBaseSpecification(queryParam).and(querySpec);
     }
 
-
-    @Override
-    public void createTable(String id) {
-
-    }
-
     @Override
     public void createTable(User user) {
-        String tableName = preciseShardingAlgorithm.doSharding(this.tableRule.getActualTableNames("db0"), new PreciseShardingValue("", "", user.getCreateTime()));
+        Map<String,Collection<Comparable>> shardingValuesMap = Maps.newHashMap();
+        shardingValuesMap.put("id", Arrays.asList(user.getId()));
+        shardingValuesMap.put("registerTime", Arrays.asList(user.getCreateTime()));
+        Map<String,Range<Comparable>> rangeValuesMap = Maps.newHashMap();
+        ComplexKeysShardingValue shardingValue = new ComplexKeysShardingValue<>(User.TABLE_NAME, shardingValuesMap, rangeValuesMap);
+        Collection<String> tableNames = algorithm.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue);
         EntityManager entityManager = baseDao.getEntityManager();
-        entityManager.createNativeQuery("CREATE TABLE IF NOT EXISTS " + tableName + " LIKE " + baseDao.getTableName()).executeUpdate();
+        for(String tableName:tableNames){
+            entityManager.createNativeQuery("CREATE TABLE IF NOT EXISTS " + tableName + " LIKE " + baseDao.getTableName()).executeUpdate();
+        }
     }
 
     @Override
@@ -82,8 +88,12 @@ public class UserService extends StandardShardingService<User, String> implement
         EntityManager entityManager = baseDao.getEntityManager();
         LocalDate startTime = LocalDate.parse((String) queryParam.get("startTime"));
         LocalDate endTime = LocalDate.parse((String) queryParam.get("endTime"));
-        RangeShardingValue rangeShardingValue = new RangeShardingValue("", "", Range.range(startTime.toDate(), BoundType.CLOSED, endTime.toDate(), BoundType.CLOSED));
-        Collection<String> tableNames = rangeShardingAlgorithm.doSharding(this.tableRule.getActualTableNames("db0"), rangeShardingValue);
+        Map<String,Collection<Date>> shardingValuesMap = Maps.newHashMap();
+        Map<String,Range<Date>> rangeValuesMap = Maps.newHashMap();
+        rangeValuesMap.put("registerTime", Range.range(startTime.toDate(), BoundType.CLOSED, endTime.toDate(), BoundType.CLOSED));
+        ComplexKeysShardingValue shardingValue = new ComplexKeysShardingValue<>(User.TABLE_NAME, shardingValuesMap, rangeValuesMap);
+
+        Collection<String> tableNames = algorithm.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue);
         for (String tableName : tableNames) {
             entityManager.createNativeQuery("CREATE TABLE IF NOT EXISTS " + tableName + " LIKE " + baseDao.getTableName()).executeUpdate();
         }

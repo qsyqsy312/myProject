@@ -43,12 +43,11 @@ spring:
     sharding:
       tables:
         user:
-          actual-data-nodes: db0.user_$->{2000..2100}0$->{1..9},db0.user_$->{2000..2100}$->{10..12}
+          actual-data-nodes: db0.user_$->{2020..2030}0$->{1..9},db0.user_$->{2020..2030}$->{10..12}
           table-strategy:
-            standard:
-              sharding-column: createTime
-              preciseAlgorithmClassName: com.test.util.UserShardingAlgorithm
-              rangeAlgorithmClassName: com.test.util.UserShardingAlgorithm
+            complex:
+              sharding-columns: id,registerTime
+              algorithm-class-name: com.test.util.UserShardingAlgorithm
       binding-tables: user
 
 

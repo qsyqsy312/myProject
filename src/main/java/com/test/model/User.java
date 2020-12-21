@@ -4,6 +4,7 @@ package com.test.model;
 import com.test.model.base.BaseModel;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = User.TABLE_NAME)
@@ -16,6 +17,10 @@ public class User extends BaseModel {
 
     @Column
     private String password;
+
+    @Column
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date registerTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(referencedColumnName = "id",foreignKey =@ForeignKey(ConstraintMode.NO_CONSTRAINT))
@@ -44,5 +49,13 @@ public class User extends BaseModel {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Date getRegisterTime() {
+        return registerTime;
+    }
+
+    public void setRegisterTime(Date registerTime) {
+        this.registerTime = registerTime;
     }
 }

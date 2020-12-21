@@ -3,10 +3,12 @@ package com.test.service.base;
 import com.test.dto.base.BaseDTO;
 import com.test.model.base.BaseModel;
 import com.test.util.UserShardingAlgorithm;
+import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingAlgorithm;
 import org.apache.shardingsphere.api.sharding.standard.PreciseShardingAlgorithm;
 import org.apache.shardingsphere.api.sharding.standard.RangeShardingAlgorithm;
 import org.apache.shardingsphere.core.rule.TableRule;
 import org.apache.shardingsphere.core.strategy.route.ShardingStrategy;
+import org.apache.shardingsphere.core.strategy.route.complex.ComplexShardingStrategy;
 import org.apache.shardingsphere.core.strategy.route.standard.StandardShardingStrategy;
 import org.apache.shardingsphere.shardingjdbc.jdbc.core.datasource.ShardingDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,22 +30,28 @@ import java.util.Map;
 
 /**
  * 单分片键水平分表
+ *
  * @param <T>
  * @param <ID>
  */
-public abstract class StandardShardingService<T extends BaseModel, ID extends Serializable> extends BaseService<T,ID> implements IShardingService<T,ID>{
+public abstract class StandardShardingService<T extends BaseModel, ID extends Serializable> extends BaseService<T, ID> implements IShardingService<T, ID> {
 
 
-    protected PreciseShardingAlgorithm preciseShardingAlgorithm;
-    protected RangeShardingAlgorithm rangeShardingAlgorithm;
+    protected ComplexKeysShardingAlgorithm algorithm;
     protected TableRule tableRule;
 
     @Autowired
     protected ApplicationContext applicationContext;
 
     @PostConstruct
-    public void init(){
-        ShardingDataSource bean = applicationContext.getBean(ShardingDataSource.class);
+    public void init() {
+        ShardingDataSource bean = null;
+        try {
+            bean = applicationContext.getBean(ShardingDataSource.class);
+        } catch (Exception e) {
+            //TODO :LOG
+            return;
+        }
         Collection<TableRule> tableRules = bean.getRuntimeContext().getRule().getTableRules();
         for (TableRule tableRule : tableRules) {
             if (baseDao.getTableName().equals(tableRule.getLogicTable())) {
@@ -51,20 +59,17 @@ public abstract class StandardShardingService<T extends BaseModel, ID extends Se
                 break;
             }
         }
-        Assert.notNull(tableRule,"分表规则未配置！");
+        Assert.notNull(tableRule, "分表规则未配置！");
         //反射取出分片算法实现
-        StandardShardingStrategy tableShardingStrategy = (StandardShardingStrategy)tableRule.getTableShardingStrategy();
-        Field preciseShardingAlgorithm = ReflectionUtils.findField(StandardShardingStrategy.class, "preciseShardingAlgorithm");
-        ReflectionUtils.makeAccessible(preciseShardingAlgorithm);
-        Field rangeShardingAlgorithm = ReflectionUtils.findField(StandardShardingStrategy.class, "rangeShardingAlgorithm");
-        ReflectionUtils.makeAccessible(rangeShardingAlgorithm);
-        this.preciseShardingAlgorithm = (PreciseShardingAlgorithm)ReflectionUtils.getField(preciseShardingAlgorithm,tableShardingStrategy);
-        this.rangeShardingAlgorithm = (RangeShardingAlgorithm)ReflectionUtils.getField(rangeShardingAlgorithm,tableShardingStrategy);
+        ComplexShardingStrategy tableShardingStrategy = (ComplexShardingStrategy) tableRule.getTableShardingStrategy();
+        Field shardingAlgorithm = ReflectionUtils.findField(ComplexShardingStrategy.class, "shardingAlgorithm");
+        ReflectionUtils.makeAccessible(shardingAlgorithm);
+        this.algorithm = (ComplexKeysShardingAlgorithm) ReflectionUtils.getField(shardingAlgorithm, tableShardingStrategy);
     }
 
     @Override
     public BaseDTO save(BaseDTO dto) throws Exception {
-        T t = toEntity(dto,baseDao.getDomainClazz().newInstance());
+        T t = toEntity(dto, baseDao.getDomainClazz().newInstance());
         fillSaveValue(t);
         customIDGenerator(t);
         createTable(t);
@@ -74,7 +79,7 @@ public abstract class StandardShardingService<T extends BaseModel, ID extends Se
     @Override
     public BaseDTO update(BaseDTO dto) {
         T one = baseDao.findOneById((ID) dto.getId());
-        T t = toEntity(dto,one);
+        T t = toEntity(dto, one);
         fillSaveValue(t);
         createTable(t);
         return toDTO(baseDao.customUpdate(t));
