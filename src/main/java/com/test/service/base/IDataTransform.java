@@ -15,7 +15,13 @@ public interface IDataTransform<T extends BaseModel, ID extends Serializable> {
 
     T toEntity(BaseDTO dto,T entity);
 
-    BaseDTO toDTO(T entity);
+    /**
+     * 返回类型不限制，可加入别的任意DTO组装
+     * @param entity
+     * @param params
+     * @return
+     */
+    Object toDTO(T entity);
 
     void customIDGenerator(T t);
 }

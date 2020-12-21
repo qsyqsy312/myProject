@@ -21,15 +21,15 @@ public interface IBaseService<T extends BaseModel, ID extends Serializable> {
 
     Specification<T> getSpecification(Map<String, Object> queryParam);
 
-    BaseDTO save(BaseDTO dto) throws Exception;
+    Object save(BaseDTO dto) throws Exception;
 
-    BaseDTO update(BaseDTO dto) throws Exception;
+    Object update(BaseDTO dto) throws Exception;
 
     void deleteByIds(Iterable<ID> ids) throws Exception;
 
     T findOneById(ID id);
 
-    List<BaseDTO> list(Map<String, Object> queryParam, Sort sort);
+    List<Object> list(Map<String, Object> queryParam, Sort sort);
 
-    Page<BaseDTO> page(Map<String, Object> queryParam, Pageable pageable);
+    Page<Object> page(Map<String, Object> queryParam, Pageable pageable);
 }

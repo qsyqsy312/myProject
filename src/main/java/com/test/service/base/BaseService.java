@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +65,7 @@ public abstract class BaseService<T extends BaseModel, ID extends Serializable> 
 
     @Override
     @Transactional(rollbackFor = Exception.class,propagation = Propagation.REQUIRED)
-    public BaseDTO save(BaseDTO dto) throws Exception{
+    public Object save(BaseDTO dto) throws Exception{
         T t = toEntity(dto,baseDao.getDomainClazz().newInstance());
         fillSaveValue(t);
         customIDGenerator(t);
@@ -77,7 +76,7 @@ public abstract class BaseService<T extends BaseModel, ID extends Serializable> 
 
     @Override
     @Transactional(rollbackFor = Exception.class,propagation = Propagation.REQUIRED)
-    public BaseDTO update(BaseDTO dto) {
+    public Object update(BaseDTO dto) {
         T one = baseDao.findOneById((ID) dto.getId());
         T t = toEntity(dto,one);
         fillSaveValue(t);
@@ -102,13 +101,13 @@ public abstract class BaseService<T extends BaseModel, ID extends Serializable> 
 
     @Override
     @Transactional(readOnly = true)
-    public List<BaseDTO> list(Map<String, Object> queryParam, Sort sort) {
+    public List<Object> list(Map<String, Object> queryParam, Sort sort) {
         return baseDao.findAll(getSpecification(queryParam), sort).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<BaseDTO> page(Map<String, Object> queryParam, Pageable pageable) {
+    public Page<Object> page(Map<String, Object> queryParam, Pageable pageable) {
         Page<T> page = baseDao.findAll(getSpecification(queryParam), pageable);
         return page.map(this::toDTO);
     }
