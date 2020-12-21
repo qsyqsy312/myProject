@@ -43,6 +43,8 @@ spring:
         username: root
         password:
     sharding:
+      #默认数据源
+      default-data-source-name: ds0
       # 分表策略
       tables:
         user:

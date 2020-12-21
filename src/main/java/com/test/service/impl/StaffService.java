@@ -54,7 +54,7 @@ public class StaffService extends BaseService<Staff,String> implements IStaffSer
     }
 
     @Override
-    public BaseDTO toDTO(Staff entity) {
+    public BaseDTO toDTO(Staff entity,Object ... data) {
         StaffDTO staffDTO =new StaffDTO();
         BeanUtils.copyProperties(entity,staffDTO);
         return staffDTO;

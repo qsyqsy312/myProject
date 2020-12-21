@@ -6,6 +6,8 @@ import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingAlgorit
 import org.apache.shardingsphere.core.rule.TableRule;
 import org.apache.shardingsphere.core.strategy.route.complex.ComplexShardingStrategy;
 import org.apache.shardingsphere.shardingjdbc.jdbc.core.datasource.ShardingDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
@@ -30,6 +32,8 @@ import java.util.Map;
  */
 public abstract class StandardShardingService<T extends BaseModel, ID extends Serializable> extends BaseService<T, ID> implements IShardingService<T, ID> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(StandardShardingService.class);
+
 
     protected ComplexKeysShardingAlgorithm algorithm;
     protected TableRule tableRule;
@@ -43,7 +47,7 @@ public abstract class StandardShardingService<T extends BaseModel, ID extends Se
         try {
             bean = applicationContext.getBean(ShardingDataSource.class);
         } catch (Exception e) {
-            //TODO :LOG
+            LOGGER.info("sharding-jdbc not configured");
             return;
         }
         Collection<TableRule> tableRules = bean.getRuntimeContext().getRule().getTableRules();

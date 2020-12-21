@@ -35,7 +35,7 @@ public class UserService extends StandardShardingService<User, String> implement
     }
 
     @Override
-    public Object toDTO(User entity) {
+    public Object toDTO(User entity,Object ... data) {
         UserDTO dto = new UserDTO();
         dto.setUserName(entity.getUserName());
         dto.setId(entity.getId());

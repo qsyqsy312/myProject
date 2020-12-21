@@ -21,7 +21,7 @@ public interface IDataTransform<T extends BaseModel, ID extends Serializable> {
      * @param params
      * @return
      */
-    Object toDTO(T entity);
+    Object toDTO(T entity,Object...data);
 
     void customIDGenerator(T t);
 }
