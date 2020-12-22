@@ -39,6 +39,8 @@ public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends S
 
     private final String tableName;
 
+
+
     @SuppressWarnings("all")
     public BaseDaoImpl(JpaEntityInformation<T, ?> entityInformation, EntityManager em) {
         super(entityInformation, em);
