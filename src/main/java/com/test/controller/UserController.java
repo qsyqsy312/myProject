@@ -25,6 +25,12 @@ public class UserController {
         return userService.save(userDTO);
     }
 
+    @RequestMapping(value = "update", method = RequestMethod.POST)
+    @ResponseBody
+    public Object update(@RequestBody UserDTO userDTO) throws Exception{
+        return userService.update(userDTO);
+    }
+
     @RequestMapping(value = "query", method = RequestMethod.GET)
     @ResponseBody
     public Object query(@RequestParam Map<String, Object> queryParam) {

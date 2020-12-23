@@ -54,20 +54,11 @@ public abstract class BaseService<T extends BaseModel, ID extends Serializable> 
 
 
 
-    protected void fillSaveValue(T t) {
-        if (t instanceof BaseModel) {
-            ((BaseModel) t).setLastModifyTime(new Date());
-            if (StringUtils.isEmpty(((BaseModel) t).getId())) {
-                ((BaseModel) t).setCreateTime(new Date());
-            }
-        }
-    }
 
     @Override
     @Transactional(rollbackFor = Exception.class,propagation = Propagation.REQUIRED)
     public Object save(BaseDTO dto) throws Exception{
         T t = toEntity(dto,baseDao.getDomainClazz().newInstance());
-        fillSaveValue(t);
         customIDGenerator(t);
 
         return toDTO(baseDao.customSave(t));
@@ -79,7 +70,6 @@ public abstract class BaseService<T extends BaseModel, ID extends Serializable> 
     public Object update(BaseDTO dto) {
         T one = baseDao.findOneById((ID) dto.getId());
         T t = toEntity(dto,one);
-        fillSaveValue(t);
         return toDTO(baseDao.customUpdate(t));
     }
 

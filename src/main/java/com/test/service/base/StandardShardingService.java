@@ -68,7 +68,6 @@ public abstract class StandardShardingService<T extends BaseModel, ID extends Se
     @Override
     public Object save(BaseDTO dto) throws Exception {
         T t = toEntity(dto, baseDao.getDomainClazz().newInstance());
-        fillSaveValue(t);
         customIDGenerator(t);
         createTable(t);
         return toDTO(baseDao.customSave(t));
@@ -78,7 +77,6 @@ public abstract class StandardShardingService<T extends BaseModel, ID extends Se
     public Object update(BaseDTO dto) {
         T one = baseDao.findOneById((ID) dto.getId());
         T t = toEntity(dto, one);
-        fillSaveValue(t);
         createTable(t);
         return toDTO(baseDao.customUpdate(t));
     }
