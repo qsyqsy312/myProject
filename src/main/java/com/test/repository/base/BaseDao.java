@@ -1,5 +1,6 @@
 package com.test.repository.base;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.test.model.base.BaseModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,7 @@ public interface BaseDao<T extends BaseModel, ID extends Serializable> extends J
 
     Class<T> getDomainClazz();
 
-    QuerydslPredicateExecutor<T> getDslExecutor();
+    JPAQueryFactory getJPAQueryFactory();
 
     String getTableName();
 

@@ -44,7 +44,7 @@ spring:
         password:
     sharding:
       #默认数据源
-      default-data-source-name: ds0
+      default-data-source-name: db0
       # 分表策略
       tables:
         user:
@@ -54,7 +54,7 @@ spring:
               #分表字段
               sharding-columns: id,registerTime
               #分表算法
-              algorithm-class-name: com.test.util.UserShardingAlgorithm
+              algorithm-class-name: com.test.service.shardingRuleAlgorithm.UserShardingAlgorithm
 #      binding-tables: user
 
 

@@ -1,4 +1,4 @@
-package com.test.util;
+package com.test.service.shardingRuleAlgorithm;
 
 
 import com.google.common.collect.Lists;

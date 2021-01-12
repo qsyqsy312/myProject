@@ -1,5 +1,6 @@
 package com.test.repository.base;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.test.model.base.BakDeleteModel;
 import com.test.model.base.BaseModel;
 import com.test.model.base.BaseTenantModel;
@@ -15,10 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
-import org.springframework.data.jpa.repository.support.QuerydslJpaPredicateExecutor;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
-import org.springframework.data.querydsl.SimpleEntityPathResolver;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -40,7 +38,7 @@ public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends S
 
     private final EntityManager em;
 
-    private final QuerydslPredicateExecutor<T> dslExecutor;
+    private final JPAQueryFactory jpaQueryFactory;
 
     private final String tableName;
 
@@ -56,7 +54,7 @@ public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends S
         MetamodelImplementor metamodel = sessionFactory.getMetamodel();
         SingleTableEntityPersister entityPersister = (SingleTableEntityPersister)metamodel.entityPersister(getDomainClass());
         tableName = entityPersister.getTableName();
-        dslExecutor = new QuerydslJpaPredicateExecutor<T>(entityInformation,em,SimpleEntityPathResolver.INSTANCE,null);
+        jpaQueryFactory = new JPAQueryFactory(em);
     }
 
 
@@ -72,8 +70,8 @@ public class BaseDaoImpl<T extends BaseModel, ID extends Serializable> extends S
     }
 
     @Override
-    public QuerydslPredicateExecutor<T> getDslExecutor() {
-        return dslExecutor;
+    public JPAQueryFactory getJPAQueryFactory() {
+        return jpaQueryFactory;
     }
 
     private void setParameters(Map<String, Object> parameters, Query query) {
