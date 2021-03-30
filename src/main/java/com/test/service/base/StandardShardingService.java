@@ -4,6 +4,7 @@ import com.test.dto.base.BaseDTO;
 import com.test.model.base.BaseModel;
 import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingAlgorithm;
 import org.apache.shardingsphere.core.rule.TableRule;
+import org.apache.shardingsphere.core.strategy.route.ShardingStrategy;
 import org.apache.shardingsphere.core.strategy.route.complex.ComplexShardingStrategy;
 import org.apache.shardingsphere.shardingjdbc.jdbc.core.datasource.ShardingDataSource;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public abstract class StandardShardingService<T extends BaseModel, ID extends Se
     private static final Logger LOGGER = LoggerFactory.getLogger(StandardShardingService.class);
 
 
-    protected ComplexKeysShardingAlgorithm algorithm;
+    protected ShardingStrategy shardingStrategy;
     protected TableRule tableRule;
 
     @Autowired
@@ -58,11 +59,7 @@ public abstract class StandardShardingService<T extends BaseModel, ID extends Se
             }
         }
         Assert.notNull(tableRule, "分表规则未配置！");
-        //反射取出分片算法实现
-        ComplexShardingStrategy tableShardingStrategy = (ComplexShardingStrategy) tableRule.getTableShardingStrategy();
-        Field shardingAlgorithm = ReflectionUtils.findField(ComplexShardingStrategy.class, "shardingAlgorithm");
-        ReflectionUtils.makeAccessible(shardingAlgorithm);
-        this.algorithm = (ComplexKeysShardingAlgorithm) ReflectionUtils.getField(shardingAlgorithm, tableShardingStrategy);
+        this.shardingStrategy = tableRule.getTableShardingStrategy();
     }
 
     @Override

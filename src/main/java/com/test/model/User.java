@@ -10,7 +10,7 @@ import java.util.Date;
 @Table(name = User.TABLE_NAME)
 public class User extends BaseModel {
 
-    public static final String TABLE_NAME = "user";
+    public static final String TABLE_NAME = "sys_user";
 
     @Column
     private String userName;

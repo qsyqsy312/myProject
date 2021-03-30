@@ -1,15 +1,17 @@
 package com.test.service.impl;
 
 import com.google.common.collect.BoundType;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.test.dto.UserDTO;
 import com.test.dto.base.BaseDTO;
-import com.test.model.Staff;
 import com.test.model.User;
 import com.test.service.IUserService;
 import com.test.service.base.StandardShardingService;
-import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingValue;
+import org.apache.shardingsphere.core.strategy.route.value.ListRouteValue;
+import org.apache.shardingsphere.core.strategy.route.value.RangeRouteValue;
+import org.apache.shardingsphere.core.strategy.route.value.RouteValue;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,9 +30,9 @@ public class UserService extends StandardShardingService<User, String> implement
         UserDTO userDTO = (UserDTO) dto;
         entity.setUserName(userDTO.getUserName());
         entity.setRegisterTime(userDTO.getRegisterTime());
-        Staff staff = new Staff();
-        staff.setId("1");
-        entity.setStaff(staff);
+//        Staff staff = new Staff();
+//        staff.setId("1");
+//        entity.setStaff(staff);
         return entity;
     }
 
@@ -71,12 +73,10 @@ public class UserService extends StandardShardingService<User, String> implement
 
     @Override
     public void createTable(User user) {
-        Map<String,Collection<Comparable>> shardingValuesMap = Maps.newHashMap();
-        shardingValuesMap.put("id", Arrays.asList(user.getId()));
-        shardingValuesMap.put("registerTime", Arrays.asList(user.getCreateTime()));
-        Map<String,Range<Comparable>> rangeValuesMap = Maps.newHashMap();
-        ComplexKeysShardingValue shardingValue = new ComplexKeysShardingValue<>(User.TABLE_NAME, shardingValuesMap, rangeValuesMap);
-        Collection<String> tableNames = algorithm.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue);
+        Collection<RouteValue> shardingValue = Lists.newArrayList();
+        shardingValue.add(new ListRouteValue<>("id","tableRule",Arrays.asList(user.getId())));
+        shardingValue.add(new ListRouteValue<>("registerTime",tableRule.getLogicTable(),Arrays.asList(user.getCreateTime())));
+        Collection<String> tableNames = shardingStrategy.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue,null);
         EntityManager entityManager = baseDao.getEntityManager();
         for(String tableName:tableNames){
             entityManager.createNativeQuery("CREATE TABLE IF NOT EXISTS " + tableName + " LIKE " + baseDao.getTableName()).executeUpdate();
@@ -88,12 +88,9 @@ public class UserService extends StandardShardingService<User, String> implement
         EntityManager entityManager = baseDao.getEntityManager();
         LocalDate startTime = LocalDate.parse((String) queryParam.get("startTime"));
         LocalDate endTime = LocalDate.parse((String) queryParam.get("endTime"));
-        Map<String,Collection<Date>> shardingValuesMap = Maps.newHashMap();
-        Map<String,Range<Date>> rangeValuesMap = Maps.newHashMap();
-        rangeValuesMap.put("registerTime", Range.range(startTime.toDate(), BoundType.CLOSED, endTime.toDate(), BoundType.CLOSED));
-        ComplexKeysShardingValue shardingValue = new ComplexKeysShardingValue<>(User.TABLE_NAME, shardingValuesMap, rangeValuesMap);
-
-        Collection<String> tableNames = algorithm.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue);
+        Collection<RouteValue> shardingValue =  Lists.newArrayList();
+        shardingValue.add(new RangeRouteValue<>("registerTime",tableRule.getLogicTable(),Range.range(startTime.toDate(), BoundType.CLOSED, endTime.toDate(), BoundType.CLOSED)));
+        Collection<String> tableNames = shardingStrategy.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue,null);
         for (String tableName : tableNames) {
             entityManager.createNativeQuery("CREATE TABLE IF NOT EXISTS " + tableName + " LIKE " + baseDao.getTableName()).executeUpdate();
         }

@@ -47,8 +47,8 @@ spring:
       default-data-source-name: db0
       # 分表策略
       tables:
-        user:
-          actual-data-nodes: db0.user_$->{2020..2030}0$->{1..9},db0.user_$->{2020..2030}$->{10..12}
+        sys_user:
+          actual-data-nodes: db0.sys_user_$->{2020..2030}0$->{1..9},db0.sys_user_$->{2020..2030}$->{10..12}
           table-strategy:
             complex:
               #分表字段
