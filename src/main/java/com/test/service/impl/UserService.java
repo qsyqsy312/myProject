@@ -1,28 +1,22 @@
 package com.test.service.impl;
 
-import com.google.common.collect.BoundType;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
 import com.test.dto.UserDTO;
 import com.test.dto.base.BaseDTO;
 import com.test.model.User;
 import com.test.service.IUserService;
-import com.test.service.base.StandardShardingService;
-import org.apache.shardingsphere.core.strategy.route.value.ListRouteValue;
-import org.apache.shardingsphere.core.strategy.route.value.RangeRouteValue;
-import org.apache.shardingsphere.core.strategy.route.value.RouteValue;
+import com.test.service.base.BaseService;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
 import javax.persistence.criteria.*;
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
-public class UserService extends StandardShardingService<User, String> implements IUserService {
+public class UserService extends BaseService<User, String> implements IUserService {
 
 
     @Override
@@ -71,30 +65,30 @@ public class UserService extends StandardShardingService<User, String> implement
         return baseDao.getBaseSpecification(queryParam).and(querySpec);
     }
 
-    @Override
-    public void createTable(User user) {
-        Collection<RouteValue> shardingValue = Lists.newArrayList();
-        shardingValue.add(new ListRouteValue<>("id","tableRule",Arrays.asList(user.getId())));
-        shardingValue.add(new ListRouteValue<>("registerTime",tableRule.getLogicTable(),Arrays.asList(user.getCreateTime())));
-        Collection<String> tableNames = shardingStrategy.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue,null);
-        EntityManager entityManager = baseDao.getEntityManager();
-        for(String tableName:tableNames){
-            entityManager.createNativeQuery("CREATE TABLE IF NOT EXISTS " + tableName + " LIKE " + baseDao.getTableName()).executeUpdate();
-        }
-    }
+//    @Override
+//    public void createTable(User user) {
+//        Collection<RouteValue> shardingValue = Lists.newArrayList();
+//        shardingValue.add(new ListRouteValue<>("id","tableRule",Arrays.asList(user.getId())));
+//        shardingValue.add(new ListRouteValue<>("registerTime",tableRule.getLogicTable(),Arrays.asList(user.getCreateTime())));
+//        Collection<String> tableNames = shardingStrategy.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue,null);
+//        EntityManager entityManager = baseDao.getEntityManager();
+//        for(String tableName:tableNames){
+//            entityManager.createNativeQuery("CREATE TABLE IF NOT EXISTS " + tableName + " LIKE " + baseDao.getTableName()).executeUpdate();
+//        }
+//    }
 
-    @Override
-    public void createTable(Map<String, Object> queryParam) {
-        EntityManager entityManager = baseDao.getEntityManager();
-        LocalDate startTime = LocalDate.parse((String) queryParam.get("startTime"));
-        LocalDate endTime = LocalDate.parse((String) queryParam.get("endTime"));
-        Collection<RouteValue> shardingValue =  Lists.newArrayList();
-        shardingValue.add(new RangeRouteValue<>("registerTime",tableRule.getLogicTable(),Range.range(startTime.toDate(), BoundType.CLOSED, endTime.toDate(), BoundType.CLOSED)));
-        Collection<String> tableNames = shardingStrategy.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue,null);
-        for (String tableName : tableNames) {
-            entityManager.createNativeQuery("CREATE TABLE IF NOT EXISTS " + tableName + " LIKE " + baseDao.getTableName()).executeUpdate();
-        }
-    }
+//    @Override
+//    public void createTable(Map<String, Object> queryParam) {
+//        EntityManager entityManager = baseDao.getEntityManager();
+//        LocalDate startTime = LocalDate.parse((String) queryParam.get("startTime"));
+//        LocalDate endTime = LocalDate.parse((String) queryParam.get("endTime"));
+//        Collection<RouteValue> shardingValue =  Lists.newArrayList();
+//        shardingValue.add(new RangeRouteValue<>("registerTime",tableRule.getLogicTable(),Range.range(startTime.toDate(), BoundType.CLOSED, endTime.toDate(), BoundType.CLOSED)));
+//        Collection<String> tableNames = shardingStrategy.doSharding(this.tableRule.getActualTableNames("db0"), shardingValue,null);
+//        for (String tableName : tableNames) {
+//            entityManager.createNativeQuery("CREATE TABLE IF NOT EXISTS " + tableName + " LIKE " + baseDao.getTableName()).executeUpdate();
+//        }
+//    }
 
 
 }

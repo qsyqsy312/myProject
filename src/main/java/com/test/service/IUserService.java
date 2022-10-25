@@ -1,8 +1,8 @@
 package com.test.service;
 
 import com.test.model.User;
-import com.test.service.base.IShardingService;
+import com.test.service.base.IBaseService;
 
-public interface IUserService extends IShardingService<User,String> {
+public interface IUserService extends IBaseService<User,String> {
 
 }
