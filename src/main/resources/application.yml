@@ -63,12 +63,16 @@ spring:
 
 flowable:
   idm:
-    enabled: false
+    app:
+      admin:
+        user-id: admin
+        password: admin
+        first-name: arthur
+        last-name: qian
+    enabled: true
   async-executor-activate: false
   common:
     app:
-      security:
-
       role-prefix:
       idm-url: http://localhost:8080/flowable-idm
       idm-admin:
@@ -80,3 +84,10 @@ flowable:
   rest:
     app:
       authentication-mode: verify-privilege
+
+
+
+logging:
+  level:
+    org.flowable.engine.impl.persistence.entity.*: debug
+    org.flowable.task.service.impl.persistence.entity.*: debug
